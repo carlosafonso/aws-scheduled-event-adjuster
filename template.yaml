@@ -18,46 +18,12 @@ Parameters:
     Description: (Optional) The tag prefix to use when checking resources'
       tags. Leave empty to use the default prefix.
     Default: 'scheduled-event-adjuster'
-  WinterTriggerMonth:
-    Type: Number
-    Description: The month when the winter DST change will be triggered. 1=January, 12=December
-    MinValue: 1
-    MaxValue: 12
-  WinterTriggerDay:
-    Type: Number
-    Description: The day when the winter DST change will be triggered. 1 to 31
-    MinValue: 1
-    MaxValue: 31
-  WinterTriggerHour:
-    Type: Number
-    Description: The hour when the winter DST change will be triggered. 0 to 23
-    MinValue: 0
-    MaxValue: 23
-  WinterTriggerMinute:
-    Type: Number
-    Description: The minute when the winter DST change will be triggered. 0 to 59
-    MinValue: 0
-    MaxValue: 59
-  SummerTriggerMonth:
-    Type: Number
-    Description: The month when the summer DST change will be triggered. 1=January, 12=December
-    MinValue: 1
-    MaxValue: 12
-  SummerTriggerDay:
-    Type: Number
-    Description: The day when the summer DST change will be triggered. 1 to 31
-    MinValue: 1
-    MaxValue: 31
-  SummerTriggerHour:
-    Type: Number
-    Description: The hour when the summer DST change will be triggered. 0 to 23
-    MinValue: 0
-    MaxValue: 23
-  SummerTriggerMinute:
-    Type: Number
-    Description: The minute when the summer DST change will be triggered. 0 to 59
-    MinValue: 0
-    MaxValue: 59
+  WinterTriggerCronExpression:
+    Type: String
+    Description: Cron expression to launch the trigger to adjust Winter DST
+  SummerTriggerCronExpression:
+    Type: String
+    Description: Cron expression to launch the trigger to adjust Summer DST
 
 Globals:
   Function:
@@ -104,14 +70,8 @@ Resources:
       ScheduleExpression: !Join
         - ''
         - - 'cron('
-          - !Ref WinterTriggerMinute
-          - ' '
-          - !Ref WinterTriggerHour
-          - ' ' 
-          - !Ref WinterTriggerDay
-          - ' '
-          - !Ref WinterTriggerMonth
-          - ' ? *)'
+          - !Ref WinterTriggerCronExpression
+          - ')'
       State: ENABLED
       Targets:
         - Arn: !GetAtt AdjustScheduleFunction.Arn
@@ -136,14 +96,8 @@ Resources:
       ScheduleExpression: !Join
         - ''
         - - 'cron('
-          - !Ref SummerTriggerMinute
-          - ' '
-          - !Ref SummerTriggerHour
-          - ' ' 
-          - !Ref SummerTriggerDay
-          - ' '
-          - !Ref SummerTriggerMonth
-          - ' ? *)'
+          - !Ref SummerTriggerCronExpression
+          - ')'
       State: ENABLED
       Targets:
         - Arn: !GetAtt AdjustScheduleFunction.Arn
