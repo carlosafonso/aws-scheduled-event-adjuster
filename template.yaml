@@ -18,6 +18,12 @@ Parameters:
     Description: (Optional) The tag prefix to use when checking resources'
       tags. Leave empty to use the default prefix.
     Default: 'scheduled-event-adjuster'
+  WinterTriggerCronExpression:
+    Type: String
+    Description: Cron expression to launch the trigger to adjust Winter DST
+  SummerTriggerCronExpression:
+    Type: String
+    Description: Cron expression to launch the trigger to adjust Summer DST
 
 Globals:
   Function:
@@ -53,7 +59,7 @@ Resources:
         - EventBridgePutEventsPolicy:
             EventBusName: default
 
-  Trigger:
+  WinterTrigger:
     Type: AWS::Events::Rule
     Properties:
       EventPattern:
@@ -61,20 +67,49 @@ Resources:
           - scheduled-event-adjuster
         detail-type:
           - 'ManualTrigger'
-      ScheduleExpression: cron(0 0,12 * * ? *)
+      ScheduleExpression: !Join
+        - ''
+        - - 'cron('
+          - !Ref WinterTriggerCronExpression
+          - ')'
       State: ENABLED
       Targets:
         - Arn: !GetAtt AdjustScheduleFunction.Arn
           Id: adjust-schedule-lambda-function
 
-  TriggerPermission:
+  WinterTriggerPermission:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt AdjustScheduleFunction.Arn
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt Trigger.Arn
+      SourceArn: !GetAtt WinterTrigger.Arn
 
+  SummerTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - scheduled-event-adjuster
+        detail-type:
+          - 'ManualTrigger'
+      ScheduleExpression: !Join
+        - ''
+        - - 'cron('
+          - !Ref SummerTriggerCronExpression
+          - ')'
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt AdjustScheduleFunction.Arn
+          Id: adjust-schedule-lambda-function
+
+  SummerTriggerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt AdjustScheduleFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SummerTrigger.Arn
   #
   # EventBridge subscription to notify about a completion via SNS
   #
